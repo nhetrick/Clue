@@ -4,9 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
-public class DetectiveNotes extends JFrame {
+public class DetectiveNotes extends JDialog{
 	 public DetectiveNotes() {
 		 setSize(new Dimension(600, 600));
 		 setTitle("Detective Notes");
@@ -27,7 +28,7 @@ public class DetectiveNotes extends JFrame {
 	
 	public static void main(String[] args) {
 		DetectiveNotes notes = new DetectiveNotes();
-		notes.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		notes.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		notes.setVisible(true);
 	}
 }

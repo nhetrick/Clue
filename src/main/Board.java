@@ -84,8 +84,20 @@ public class Board extends JPanel {
 	}
 	
 	//USED TO DRAW BOARD. Use objected-oriented approach. 
-	public void paintComponent() {
-		
+	public void paintComponent(Graphics g) {
+		int k = 0;
+		while (k < cells.size()) {
+			for (int i = 0; i < numRows; i++) {
+				for (int j = 0; j < numColumns; j++) {
+					cells.get(k).draw(g, j, i);
+					k++;
+				}
+			}
+		}
+		self.draw(g);
+		for (int i = 0; i < compPlayers.size(); i++) {
+			compPlayers.get(i).draw(g);
+		}
 	}
 
 	/**
@@ -185,7 +197,7 @@ public class Board extends JPanel {
 		playersLine = scan.nextLine();
 		String[] line = playersLine.split(", ");
 		self.setName(line[0]);
-		self.setColor(line[1]);
+		self.setCol(line[1]);
 		self.setStartRow(Integer.parseInt(line[2]));
 		self.setStartCol(Integer.parseInt(line[3]));
 		while( scan.hasNextLine() ) {
@@ -194,7 +206,7 @@ public class Board extends JPanel {
 			l = playersLine.split(", ");
 			ComputerPlayer comp = new ComputerPlayer();
 			comp.setName(l[0]);
-			comp.setColor(l[1]);
+			comp.setCol(l[1]);
 			comp.setStartRow(Integer.parseInt(l[2]));
 			comp.setStartCol(Integer.parseInt(l[3]));
 			compPlayers.add(comp);

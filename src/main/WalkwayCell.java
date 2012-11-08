@@ -21,14 +21,15 @@ public class WalkwayCell extends BoardCell{
 		return false;
 	}
 	
-	@Override
-	public void draw(Graphics g) {
+	public void draw(Graphics g, int r, int c) {
 		Graphics2D g2 = (Graphics2D) g;
-		g2.setColor(Color.yellow);
-		float thickness = 2;
+		g2.setColor(Color.magenta);
+		g2.fillRect(r*size, c*size, size, size);
+		g2.setColor(Color.black);
+		float thickness = 1;
 		Stroke oldStroke = g2.getStroke();
 		g2.setStroke(new BasicStroke(thickness));
-		g2.drawRect(row*20, col*20, 20, 20);
+		g2.drawRect(r*size, c*size, size, size);
 		g2.setStroke(oldStroke);
 	}
 }

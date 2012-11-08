@@ -47,15 +47,30 @@ public class RoomCell extends BoardCell {
 	}
 	
 	//Draw the gui
-	@Override
-	public void draw(Graphics g) {
+	public void draw(Graphics g, int r, int c) {
 		Graphics2D g2 = (Graphics2D) g;
-		g2.setColor(Color.gray);
-		float thickness = 2;
-		Stroke oldStroke = g2.getStroke();
-		g2.setStroke(new BasicStroke(thickness));
-		g2.drawRect(row*20, col*20, 20, 20);
-		g2.setStroke(oldStroke);
+		if (getInitial() == 'X') {
+			g2.setColor(Color.lightGray);
+			g2.fillRect(r*size, c*size, size, size);
+		} else {
+			g2.setColor(Color.darkGray);
+			g2.fillRect(r*size, c*size, size, size);
+		}
+		g2.setColor(Color.black);
+		switch (doorDirection) {
+		case UP: 
+			g2.fillRect(r*size, c*size, size, 4);
+			break;
+		case DOWN:
+			g2.fillRect(r*size, c*size + size - 4, size, 4);
+			break;
+		case LEFT:
+			g2.fillRect(r*size, c*size, 4, size);
+			break;
+		case RIGHT:
+			g2.fillRect(r*size + size - 4, c*size, 4, size);
+			break;
+		}
 	}
 
 	public DoorDirection getDoorDirection() {

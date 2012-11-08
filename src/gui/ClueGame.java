@@ -1,3 +1,4 @@
+
 package gui;
 
 import java.awt.BorderLayout;
@@ -16,12 +17,12 @@ public class ClueGame extends JFrame {
 	DetectiveNotes notes = new DetectiveNotes();
 	
 	public ClueGame () {
-		setSize(new Dimension(600, 600));
+		setSize(new Dimension(600, 800));
 		setTitle("CLUE");
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 		menuBar.add(createFileMenu());
-		Board board = new Board("roomLegend.txt", "config.txt", "players.csv", "cards.csv");
+		Board board = new Board("roomLegend.txt", "craigAndLarsConfig.txt", "players.csv", "cards.csv");
 		add(board, BorderLayout.CENTER);
 	}
 

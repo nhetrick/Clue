@@ -4,6 +4,10 @@
  */
 package main;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 public abstract class Player {
@@ -14,6 +18,27 @@ public abstract class Player {
 	private int startCol;
 	private int targetLocation;
 	private int currentLocation;
+	final static public int size = 30;
+	final static public int diameter = 29;
+	
+	//Draw the gui
+	public void draw(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setColor(convertColor(color));
+		g2.fillOval(startRow*size, startCol*size, diameter, diameter);
+	}
+	
+	public Color convertColor(String strColor) {
+		Color color; 
+		try {     
+			// We can use reflection to convert the string to a color
+			Field field = Class.forName("java.awt.Color").getField(strColor.trim());     
+			color = (Color)field.get(null); } 
+		catch (Exception e) {  
+			color = null; // Not defined } 
+		}
+		return color;
+	}
 	
 	public int getTargetLocation() {
 		return targetLocation;
@@ -21,10 +46,10 @@ public abstract class Player {
 	public void setTargetLocation(int targetLocation) {
 		this.targetLocation = targetLocation;
 	}
-	public String getColor() {
+	public String getCol() {
 		return color;
 	}
-	public void setColor(String color) {
+	public void setCol(String color) {
 		this.color = color;
 	}
 	public int getStartRow() {
