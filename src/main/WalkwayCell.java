@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
+import java.util.Map;
 
 public class WalkwayCell extends BoardCell{
 	
@@ -21,7 +22,7 @@ public class WalkwayCell extends BoardCell{
 		return false;
 	}
 	
-	public void draw(Graphics g, int r, int c) {
+	public void draw(Graphics g, int r, int c, Map<Character, String> rooms) {
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(Color.magenta);
 		g2.fillRect(r*size, c*size, size, size);

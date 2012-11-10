@@ -1,12 +1,13 @@
 package main;
 
 import java.awt.Graphics;
+import java.util.Map;
 
 public abstract class BoardCell {
 	protected char cellType;
 	protected int row;
 	protected int col;
-	final static public int size = 30;
+	final static public int size = 40;
 	
 	public boolean isWalkway() {
 		if( cellType == 'W' ) {
@@ -27,7 +28,7 @@ public abstract class BoardCell {
 	public abstract boolean isDoorway();
 	
 	//Overwritten in RoomCell and WalkwayCell
-	abstract void draw(Graphics g, int r, int c);
+	abstract void draw(Graphics g, int r, int c, Map<Character, String> rooms);
 	
 	/*
 	 * Getters

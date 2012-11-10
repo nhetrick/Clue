@@ -17,7 +17,7 @@ public class ClueGame extends JFrame {
 	DetectiveNotes notes = new DetectiveNotes();
 	
 	public ClueGame () {
-		setSize(new Dimension(600, 800));
+		setSize(new Dimension(800, 1000));
 		setTitle("CLUE");
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);

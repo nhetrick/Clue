@@ -2,12 +2,16 @@ package main;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class RoomCell extends BoardCell {
 	private DoorDirection doorDirection;
+	ArrayList<Character> roomNames = new ArrayList<Character>();
 	
 	public RoomCell(String cellType) {
 		super();
@@ -21,7 +25,9 @@ public class RoomCell extends BoardCell {
 			case 'L': this.doorDirection = DoorDirection.LEFT;
 				break;
 			case 'R': this.doorDirection = DoorDirection.RIGHT;
-				break;			
+				break;	
+			case 'N': this.doorDirection = DoorDirection.NAME;
+				break;
 			}
 		} else {
 			this.doorDirection = DoorDirection.NONE;
@@ -39,7 +45,7 @@ public class RoomCell extends BoardCell {
 	}
 
 	public enum DoorDirection {
-		UP('U'), DOWN('D'), LEFT('L'), RIGHT('R'), NONE(' ');
+		UP('U'), DOWN('D'), LEFT('L'), RIGHT('R'), NONE(' '), NAME('N');
 		char symbol;
 		DoorDirection(char symbol) {
 			this.symbol = symbol;
@@ -47,7 +53,7 @@ public class RoomCell extends BoardCell {
 	}
 	
 	//Draw the gui
-	public void draw(Graphics g, int r, int c) {
+	public void draw(Graphics g, int r, int c, Map<Character, String> rooms) {
 		Graphics2D g2 = (Graphics2D) g;
 		if (getInitial() == 'X') {
 			g2.setColor(Color.lightGray);
@@ -70,7 +76,13 @@ public class RoomCell extends BoardCell {
 		case RIGHT:
 			g2.fillRect(r*size + size - 4, c*size, 4, size);
 			break;
+		case NAME:
+			g2.setColor(Color.white);
+			g.setFont(new Font("Arial", Font.BOLD, 9));
+			g.drawString(rooms.get(cellType).toUpperCase(), r*size, c*size);
+			break;
 		}
+			
 	}
 
 	public DoorDirection getDoorDirection() {

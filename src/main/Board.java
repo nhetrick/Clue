@@ -89,7 +89,7 @@ public class Board extends JPanel {
 		while (k < cells.size()) {
 			for (int i = 0; i < numRows; i++) {
 				for (int j = 0; j < numColumns; j++) {
-					cells.get(k).draw(g, j, i);
+					cells.get(k).draw(g, j, i, rooms);
 					k++;
 				}
 			}
@@ -98,6 +98,8 @@ public class Board extends JPanel {
 		for (int i = 0; i < compPlayers.size(); i++) {
 			compPlayers.get(i).draw(g);
 		}
+		
+		
 	}
 
 	/**

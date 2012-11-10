@@ -18,8 +18,8 @@ public abstract class Player {
 	private int startCol;
 	private int targetLocation;
 	private int currentLocation;
-	final static public int size = 30;
-	final static public int diameter = 29;
+	final static public int size = 40;
+	final static public int diameter = 39;
 	
 	//Draw the gui
 	public void draw(Graphics g) {
