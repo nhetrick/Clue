@@ -3,7 +3,15 @@
 // 10/26/12
 
 package main;
+import gui.MakeAGuessPanel;
+
+import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -15,7 +23,9 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.HashSet;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.text.html.HTMLDocument.Iterator;
 
 import main.Card.CardType;
 /**ORIGINAL
@@ -31,7 +41,7 @@ import main.Card.CardType;
  * @author: Nicola Hetrick
  */
 
-public class Board extends JPanel {
+public class Board extends JPanel implements MouseListener {
 
 	private ArrayList<BoardCell> cells = new ArrayList<BoardCell>();
 	private Map<Character, String> rooms = new HashMap<Character, String>();
@@ -41,10 +51,12 @@ public class Board extends JPanel {
 	private ArrayList<String> answers = new ArrayList<String>();					//stores 3 strings that will be the game answer
 	private ArrayList<String> accusations = new ArrayList<String>();				//stores 3 strings that will be a person's accusation 
 	private ArrayList<String> suggestions = new ArrayList<String>();				//stores 3 strings that will be a person's suggestion
-		
-	private HumanPlayer self = new HumanPlayer();
 	
+	private int diceNum;
+	private HumanPlayer self = new HumanPlayer();
+
 	private int numRows;
+
 	private int numColumns;
 	// The following will be used to check card configurations
 	private int numPlayers = 0;
@@ -62,9 +74,9 @@ public class Board extends JPanel {
 
 	//Who's Turn is it?? hmmmmm
 	private Player currentPlayer = self;	//human should start the game. default
-	
-	Graphics g;
-	
+	//Graphics g;
+
+
 	/**
 	 * Creates board given filenames of legend file and board config file
 	 * @param legendFilename
@@ -79,10 +91,12 @@ public class Board extends JPanel {
 		visited = new boolean[numRows * numColumns];
 		adjMatrix = new HashMap<Integer, LinkedList<Integer>>();
 		targets = new HashSet<Integer>();
-		//dealCards();  //Shuffles cards and causes loadCards to fail. Use in GUI for actual gameplay
+		dealCards();  //Shuffles cards and causes loadCards to fail. Use in GUI for actual gameplay
 		calcAdjacencies();
+		addMouseListener(this);
+
 	}
-	
+
 	//USED TO DRAW BOARD. Use objected-oriented approach. 
 	public void paintComponent(Graphics g) {
 		int k = 0;
@@ -98,8 +112,68 @@ public class Board extends JPanel {
 		for (int i = 0; i < compPlayers.size(); i++) {
 			compPlayers.get(i).draw(g);
 		}
+
+		System.out.println(targets);
+
+		java.util.Iterator<Integer> it = targets.iterator();
+		int value;
+		int coord[];
+		while (it.hasNext()) {
+			value = it.next();
+			coord = calcCoords(value);
+			cells.get(value).highlight(g, coord[1], coord[0]);
+		}
+
+	}
+
+	public void makeMove() {
+		rollDice();
+		calcTargets(getCurrentPlayer().getCurrentLocation(), getDiceNum());
+		repaint();
+		setNextPlayer();
+	}
+	
+	public void mouseClicked(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
+	public void mousePressed(MouseEvent e)  {
+		System.out.println(e.getX() + " " + e.getY());
+		System.out.println(getTargets());
+		java.util.Iterator<BoardCell> it = getTargets().iterator();
+		BoardCell value;
+		while (it.hasNext()) {
+			value = it.next();
+			if (value.containsClick(e.getX(), e.getY())) {
+				System.out.println(value.getRow() + " " + value.getCol() + " " + calcIndex(value.getRow(), value.getCol()));
+				getCurrentPlayer().setCurrentLocation(calcIndex(value.getCol(), value.getRow()));
+				getCurrentPlayer().setRow(value.getRow());
+				getCurrentPlayer().setColumn(value.getCol());
+				targets.clear();
+				repaint();
+				return;
+			}
+		}
+		JOptionPane.showMessageDialog(null, "That is not a target...");
+	}  
+	
+	public void setNextPlayer() {
 		
-		
+	}
+
+	public void rollDice() {
+		Random rand = new Random();
+		int roll = rand.nextInt(6);
+		setDiceNum(roll + 1);
+	}
+
+	public String findMapValue(char Initial) {
+		for (Map.Entry<Character, String> entry: rooms.entrySet()) {
+			if (entry.getKey().equals(Initial)) {
+				return entry.getValue();
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -190,7 +264,7 @@ public class Board extends JPanel {
 		}
 
 	}
-	
+
 	// Reads in Players
 	public void readPlayers(String playersFilename) throws FileNotFoundException, BadConfigFormatException {
 		String playersLine; 
@@ -200,8 +274,9 @@ public class Board extends JPanel {
 		String[] line = playersLine.split(", ");
 		self.setName(line[0]);
 		self.setCol(line[1]);
-		self.setStartRow(Integer.parseInt(line[2]));
-		self.setStartCol(Integer.parseInt(line[3]));
+		self.setRow(Integer.parseInt(line[2]));
+		self.setColumn(Integer.parseInt(line[3]));
+		self.setCurrentLocation(calcIndex(Integer.parseInt(line[3]), Integer.parseInt(line[2])));
 		while( scan.hasNextLine() ) {
 			playersLine = scan.nextLine();
 			String[] l;
@@ -209,13 +284,14 @@ public class Board extends JPanel {
 			ComputerPlayer comp = new ComputerPlayer();
 			comp.setName(l[0]);
 			comp.setCol(l[1]);
-			comp.setStartRow(Integer.parseInt(l[2]));
-			comp.setStartCol(Integer.parseInt(l[3]));
+			comp.setRow(Integer.parseInt(l[2]));
+			comp.setColumn(Integer.parseInt(l[3]));
+			comp.setCurrentLocation(calcIndex(Integer.parseInt(l[3]), Integer.parseInt(l[2])));
 			compPlayers.add(comp);
 		}
 		scan.close();
 	} 
-	
+
 	// Reads in Cards
 	public void readCards(String cardsFilename) throws FileNotFoundException, BadConfigFormatException {
 		String cardsLine; 
@@ -228,37 +304,59 @@ public class Board extends JPanel {
 			CardType type = CardType.NONE;
 			switch (card[1]) {
 			case "P": 	type = CardType.PERSON;
-						numPlayers++;
-						break;
+			numPlayers++;
+			break;
 			case "R":   type = CardType.ROOM;
-						numRooms++;
-						break;
+			numRooms++;
+			break;
 			case "W":   type = CardType.WEAPON;
-						numWeapons++;
-						break;
+			numWeapons++;
+			break;
 			}
 			Card c = new Card(card[0], type);
 			allCards.add(c);
 		}
 		scan.close();
 	}
-	
+
 	public void dealCards() {
+		boolean person = false;
+		boolean room = false;
+		boolean weapon = false;
+
 		//takes the list of all cards and shuffles them into a new array for random distribution
+		Collections.shuffle(allCards);
 		ArrayList<Card> c = new ArrayList<Card>();
+		ArrayList<String> a = new ArrayList<String>();
 		for (int j = 0; j < allCards.size(); j++) {
-			c.add(allCards.get(j));
+			if (allCards.get(j).getCardType() == CardType.PERSON && person == false) {
+				a.add(allCards.get(j).getName());
+				person = true;
+			} else if (allCards.get(j).getCardType() == CardType.ROOM && room == false) {
+				a.add(allCards.get(j).getName());
+				room = true;
+			} else if (allCards.get(j).getCardType() == CardType.WEAPON && weapon == false) {
+				a.add(allCards.get(j).getName());
+				weapon = true;
+			} else {
+				c.add(allCards.get(j));
+			}
 		}
+		setAnswers(a);
+
 		Collections.shuffle(c);
+
 		for (int i = 0; i < c.size();) {
 			for (int j = 0; j < compPlayers.size(); j++) {
 				compPlayers.get(j).addCards(c.get(i));
+				//System.out.println(compPlayers.get(j).getCards());
 				c.get(i).incTimesDealt();
 				compPlayers.get(j).updateSeen(c.get(i).getName());
 				numDealt++;
 				i++;
 			}
 			self.addCards(c.get(i));
+			//System.out.println(self.getCards());
 			c.get(i).incTimesDealt();
 			numDealt++;
 			i++;
@@ -276,9 +374,9 @@ public class Board extends JPanel {
 
 				LinkedList<Integer> list = new LinkedList<Integer>();
 				//System.out.println("adj list for " + calcIndex(row, col));
-//				if( getCellAt(calcIndex(row, col)).isRoom() ) {
-//					System.out.println(" with door dir " + getRoomCellAt(row, col).getDoorDirection());
-//				}
+				//				if( getCellAt(calcIndex(row, col)).isRoom() ) {
+				//					System.out.println(" with door dir " + getRoomCellAt(row, col).getDoorDirection());
+				//				}
 
 				if( getCellAt(calcIndex(row, col)).isWalkway() || getCellAt(calcIndex(row, col)).isDoorway() ) {
 
@@ -312,8 +410,11 @@ public class Board extends JPanel {
 					}
 				}
 				adjMatrix.put(calcIndex(row, col), list);
+				//System.out.println(list);
 			}
 		}
+		//System.out.println(calcIndex(6, 8) + " KKJKKK" );
+		//System.out.println(adjMatrix.get(98) + " . . . ");
 	}
 
 	/**
@@ -338,8 +439,10 @@ public class Board extends JPanel {
 		targets.clear();
 		if (getCellAt(startLocation).isDoorway()) {
 			visited[startLocation] = true;
+			//System.out.println("1");
 			targets = calcTargetsRecursively(getAdjList(startLocation).getLast(), numberOfSteps-1);
 		} else {
+			//System.out.println("--2");
 			targets = calcTargetsRecursively(startLocation, numberOfSteps);
 		}
 	}
@@ -359,7 +462,7 @@ public class Board extends JPanel {
 				set.addAll(calcTargetsRecursively(i, numberOfSteps-1));
 				visited[i] = false;
 			}
-		}
+		}		
 		return set;
 	}
 	public String disproveSuggestion(ArrayList<String> suggestion, Player current) {
@@ -488,10 +591,16 @@ public class Board extends JPanel {
 	public ArrayList<String> getAccusations() {
 		return accusations;
 	}
+	public int getDiceNum() {
+		return diceNum;
+	}
+	public void setDiceNum(int diceNum) {
+		this.diceNum = diceNum;
+	}
 	public void setAccusations(ArrayList<String> newAccusations) {
 		accusations = newAccusations;
 	}
-	
+
 	public void setWon() {
 		//determines if a winner has occured by comparing accusation to answers
 		if (getAccusations().get(0).equals(getAnswers().get(0)) && getAccusations().get(1).equals(getAnswers().get(1)) && getAccusations().get(2).equals(getAnswers().get(2))) {
@@ -515,5 +624,22 @@ public class Board extends JPanel {
 	}
 	public BoardCell getCellAt(int i) {
 		return cells.get(i);
+	}
+
+	public static void main(String[] args) {
+	Board board = new Board("roomLegend.txt", "craigAndLarsConfig.txt", "players.csv", "cards.csv");
+	board.makeMove();
+		//System.out.println(board.getDiceNum());
+	//board.calcAdjacencies();
+	//board.calcTargets(98, 2);
+	//board.highlightTargets();
+	//System.out.println(board.getCurrentPlayer().getCurrentLocation());
+	//board.calcTargets(board.getCurrentPlayer().getCurrentLocation(), 2);
+	//System.out.println(targets);
+	//int coord[] = calcCoords(98);
+	//System.out.println(coord[0] + " " + coord[1]);
+	//System.out.println(board.getAdjMatrix());
+	//System.out.println("Calc adjacencies");
+	//System.out.println("Adj List 126" + board.getAdjList(126));
 	}
 }

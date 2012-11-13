@@ -18,10 +18,7 @@ public class WeaponGuessPanel extends JPanel{
 		weaponGuess.addItem("ZAT'NI'KATEL");
 		weaponGuess.addItem("Glitter Gun");
 		weaponGuess.addItem("Anti-Plastic");
-		weaponGuess.addItem("Reaver");
 		weaponGuess.addItem("Ronan Dex");
-		weaponGuess.addItem("Glamdring");
-		weaponGuess.addItem("Dalek");
 		weaponGuess.addItem("Ancient Drone");
 		weaponGuess.addItem("Mjolnir");
 		add(weaponGuess);

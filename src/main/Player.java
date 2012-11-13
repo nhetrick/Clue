@@ -14,18 +14,18 @@ public abstract class Player {
 	private String name;
 	private ArrayList<Card> cards = new ArrayList<Card>();
 	private String color;
-	private int startRow;
-	private int startCol;
+	private int row;
+	private int col;
 	private int targetLocation;
 	private int currentLocation;
-	final static public int size = 40;
-	final static public int diameter = 39;
+	final static public int size = 38;
+	final static public int diameter = 37;
 	
 	//Draw the gui
 	public void draw(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(convertColor(color));
-		g2.fillOval(startRow*size, startCol*size, diameter, diameter);
+		g2.fillOval(row*size, col*size, diameter, diameter);
 	}
 	
 	public Color convertColor(String strColor) {
@@ -52,17 +52,17 @@ public abstract class Player {
 	public void setCol(String color) {
 		this.color = color;
 	}
-	public int getStartRow() {
-		return startRow;
+	public int getRow() {
+		return row;
 	}
-	public void setStartRow(int startRow) {
-		this.startRow = startRow;
+	public void setRow(int row) {
+		this.row = row;
 	}
-	public int getStartCol() {
-		return startCol;
+	public int getColumn() {
+		return col;
 	}
-	public void setStartCol(int startCol) {
-		this.startCol = startCol;
+	public void setColumn(int col) {
+		this.col = col;
 	}
 	public String getName() {
 		return name;

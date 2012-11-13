@@ -11,7 +11,6 @@ import java.util.Map;
 
 public class RoomCell extends BoardCell {
 	private DoorDirection doorDirection;
-	ArrayList<Character> roomNames = new ArrayList<Character>();
 	
 	public RoomCell(String cellType) {
 		super();
@@ -54,6 +53,8 @@ public class RoomCell extends BoardCell {
 	
 	//Draw the gui
 	public void draw(Graphics g, int r, int c, Map<Character, String> rooms) {
+		row = r;
+		col = c;
 		Graphics2D g2 = (Graphics2D) g;
 		if (getInitial() == 'X') {
 			g2.setColor(Color.lightGray);

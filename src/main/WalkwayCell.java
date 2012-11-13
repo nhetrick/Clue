@@ -23,6 +23,8 @@ public class WalkwayCell extends BoardCell{
 	}
 	
 	public void draw(Graphics g, int r, int c, Map<Character, String> rooms) {
+		row = r;
+		col = c;
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(Color.magenta);
 		g2.fillRect(r*size, c*size, size, size);
