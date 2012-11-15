@@ -11,7 +11,7 @@ public abstract class BoardCell {
 	protected char cellType;
 	protected int row;
 	protected int col;
-	final static public int size = 38;
+	final static public int size = 35;
 	private boolean target = false;
 	private boolean person = false;
 	

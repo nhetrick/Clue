@@ -1,8 +1,6 @@
-// Kira Combs
-// Nicola Hetrick
-// 10/26/12
-
 package main;
+import gui.ClueGame;
+//import gui.GameControlPanel;
 import gui.MakeAGuessPanel;
 
 import java.awt.Color;
@@ -51,9 +49,19 @@ public class Board extends JPanel implements MouseListener {
 	private ArrayList<String> answers = new ArrayList<String>();					//stores 3 strings that will be the game answer
 	private ArrayList<String> accusations = new ArrayList<String>();				//stores 3 strings that will be a person's accusation 
 	private ArrayList<String> suggestions = new ArrayList<String>();				//stores 3 strings that will be a person's suggestion
+	private ArrayList<Player> allPlayers = new ArrayList<Player>();
+	private boolean isInRoom = false;
+	boolean submittionComplete = true;
 	
 	private int diceNum;
 	private HumanPlayer self = new HumanPlayer();
+	
+	private String cardShown = "";
+	
+	private int playerIter = -1;
+	private boolean playerSelectedTarget = true;
+	private boolean playerEnteredRoom = false;
+	private boolean turnComplete = true;
 
 	private int numRows;
 
@@ -74,7 +82,6 @@ public class Board extends JPanel implements MouseListener {
 
 	//Who's Turn is it?? hmmmmm
 	private Player currentPlayer = self;	//human should start the game. default
-	//Graphics g;
 
 
 	/**
@@ -93,12 +100,13 @@ public class Board extends JPanel implements MouseListener {
 		targets = new HashSet<Integer>();
 		dealCards();  //Shuffles cards and causes loadCards to fail. Use in GUI for actual gameplay
 		calcAdjacencies();
+		makeArrayOfAllPlayers();
 		addMouseListener(this);
-
 	}
 
 	//USED TO DRAW BOARD. Use objected-oriented approach. 
 	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
 		int k = 0;
 		while (k < cells.size()) {
 			for (int i = 0; i < numRows; i++) {
@@ -113,8 +121,6 @@ public class Board extends JPanel implements MouseListener {
 			compPlayers.get(i).draw(g);
 		}
 
-		System.out.println(targets);
-
 		java.util.Iterator<Integer> it = targets.iterator();
 		int value;
 		int coord[];
@@ -126,11 +132,34 @@ public class Board extends JPanel implements MouseListener {
 
 	}
 
-	public void makeMove() {
-		rollDice();
-		calcTargets(getCurrentPlayer().getCurrentLocation(), getDiceNum());
-		repaint();
-		setNextPlayer();
+	public void makeMove() {	
+			playerSelectedTarget = false;
+			playerEnteredRoom = false;
+			setNextPlayer();
+			rollDice();
+			calcTargets(getCurrentPlayer().getCurrentLocation(), getDiceNum());
+			if (currentPlayer == self) {
+				repaint();
+			} else {
+				BoardCell newLoc = ((ComputerPlayer) currentPlayer).pickLocation(getTargets());
+				currentPlayer.setRow(newLoc.getRow());
+				currentPlayer.setColumn(newLoc.getCol());
+				currentPlayer.setCurrentLocation(calcIndex(newLoc.getCol(), newLoc.getRow()));
+				targets.clear();
+				playerSelectedTarget = true;
+				if (getCellAt(currentPlayer.getCurrentLocation()).isRoom()) {
+					BoardCell cell = getCellAt(getCurrentPlayer().getCurrentLocation());
+					char initial = cell.getCellType();
+					String roomSel = findMapValue(initial);
+					setSuggestions(((ComputerPlayer) currentPlayer).createSuggestion(roomSel));
+					setCardShown(disproveSuggestion(getSuggestions(), currentPlayer));
+					if (cardShown == null) {
+						setAccusations(getSuggestions());
+						setWon();
+					}
+				}
+				repaint();
+			}
 	}
 	
 	public void mouseClicked(MouseEvent e) {}
@@ -138,27 +167,60 @@ public class Board extends JPanel implements MouseListener {
 	public void mouseExited(MouseEvent e) {}
 	public void mouseReleased(MouseEvent e) {}
 	public void mousePressed(MouseEvent e)  {
-		System.out.println(e.getX() + " " + e.getY());
-		System.out.println(getTargets());
+		//turnComplete = false;
+		setSubmittionComplete(false);
+		finishTurn(e);
+		
+	}  
+	
+	public void finishTurn(MouseEvent e) {
 		java.util.Iterator<BoardCell> it = getTargets().iterator();
 		BoardCell value;
 		while (it.hasNext()) {
 			value = it.next();
 			if (value.containsClick(e.getX(), e.getY())) {
-				System.out.println(value.getRow() + " " + value.getCol() + " " + calcIndex(value.getRow(), value.getCol()));
 				getCurrentPlayer().setCurrentLocation(calcIndex(value.getCol(), value.getRow()));
 				getCurrentPlayer().setRow(value.getRow());
 				getCurrentPlayer().setColumn(value.getCol());
+				playerSelectedTarget = true;
 				targets.clear();
+				BoardCell cell = getCellAt(self.getCurrentLocation());
+				if (cell.isRoom()) {
+					int row = getCurrentPlayer().getRow();
+					int col = getCurrentPlayer().getColumn();
+					char initial = cell.getCellType();
+					String roomSel = findMapValue(initial);
+					MakeAGuessPanel magpanel = new MakeAGuessPanel(ClueGame.getBoard(), roomSel);
+					magpanel.setVisible(true);
+				} else {
+					setSubmittionComplete(true);
+				}
 				repaint();
 				return;
 			}
 		}
-		JOptionPane.showMessageDialog(null, "That is not a target...");
-	}  
+		if (getCurrentPlayer() == getSelf() && playerSelectedTarget == false) {
+			JOptionPane.showMessageDialog(null, "That is not a target...");
+		}
+	}
+	
+	public boolean isInRoomm() {
+		return isInRoom;
+	}
 	
 	public void setNextPlayer() {
-		
+		playerIter++;
+		if (playerIter > 5) {
+			playerIter = 0;
+		}
+		currentPlayer = allPlayers.get(playerIter);
+	}
+	
+	public void makeArrayOfAllPlayers() {
+		allPlayers.add(self);
+		for (int i = 0; i < compPlayers.size(); i++) {
+			allPlayers.add(compPlayers.get(i));
+		}
 	}
 
 	public void rollDice() {
@@ -251,9 +313,7 @@ public class Board extends JPanel implements MouseListener {
 					cell = new RoomCell(cellInit);
 				}
 				cells.add(cell);
-				//System.out.print(cellInit + "\t");
 			}
-			//System.out.print("\n");
 
 			rowSize.add(numColumns);
 			numRows++;
@@ -329,15 +389,15 @@ public class Board extends JPanel implements MouseListener {
 		ArrayList<Card> c = new ArrayList<Card>();
 		ArrayList<String> a = new ArrayList<String>();
 		for (int j = 0; j < allCards.size(); j++) {
-			if (allCards.get(j).getCardType() == CardType.PERSON && person == false) {
+			if (allCards.get(j).getCardType() == CardType.WEAPON && weapon == false) {
+				a.add(allCards.get(j).getName());
+				weapon = true;
+			} else if (allCards.get(j).getCardType() == CardType.PERSON && person == false) {
 				a.add(allCards.get(j).getName());
 				person = true;
 			} else if (allCards.get(j).getCardType() == CardType.ROOM && room == false) {
 				a.add(allCards.get(j).getName());
 				room = true;
-			} else if (allCards.get(j).getCardType() == CardType.WEAPON && weapon == false) {
-				a.add(allCards.get(j).getName());
-				weapon = true;
 			} else {
 				c.add(allCards.get(j));
 			}
@@ -349,14 +409,12 @@ public class Board extends JPanel implements MouseListener {
 		for (int i = 0; i < c.size();) {
 			for (int j = 0; j < compPlayers.size(); j++) {
 				compPlayers.get(j).addCards(c.get(i));
-				//System.out.println(compPlayers.get(j).getCards());
 				c.get(i).incTimesDealt();
 				compPlayers.get(j).updateSeen(c.get(i).getName());
 				numDealt++;
 				i++;
 			}
 			self.addCards(c.get(i));
-			//System.out.println(self.getCards());
 			c.get(i).incTimesDealt();
 			numDealt++;
 			i++;
@@ -368,15 +426,10 @@ public class Board extends JPanel implements MouseListener {
 	 */
 	public void calcAdjacencies() {
 
-		//System.out.println("calculating adjacencies");
 		for( int row = 0; row < numRows; row++ ) {
 			for( int col = 0; col < numColumns; col++ ) {
 
 				LinkedList<Integer> list = new LinkedList<Integer>();
-				//System.out.println("adj list for " + calcIndex(row, col));
-				//				if( getCellAt(calcIndex(row, col)).isRoom() ) {
-				//					System.out.println(" with door dir " + getRoomCellAt(row, col).getDoorDirection());
-				//				}
 
 				if( getCellAt(calcIndex(row, col)).isWalkway() || getCellAt(calcIndex(row, col)).isDoorway() ) {
 
@@ -384,37 +437,30 @@ public class Board extends JPanel implements MouseListener {
 					if( row-1 >= 0 && ( getCellAt(calcIndex(row-1, col)).isDoorway() || getCellAt(calcIndex(row-1, col)).isWalkway() ) ) {
 						if( getCellAt(calcIndex(row-1, col)).isWalkway() || getRoomCellAt(row-1, col).getDoorDirection() == RoomCell.DoorDirection.DOWN) {
 							list.add(calcIndex(row-1, col));
-							//System.out.println("\tadding " + calcIndex(row-1, col));
 						}
 					}
 					// Down
 					if( row+1 < numRows && ( getCellAt(calcIndex(row+1, col)).isDoorway() || getCellAt(calcIndex(row+1, col)).isWalkway() ) ) {
 						if( getCellAt(calcIndex(row+1, col)).isWalkway() || getRoomCellAt(row+1, col).getDoorDirection() == RoomCell.DoorDirection.UP ) {
 							list.add(calcIndex(row+1, col));
-							//System.out.println("\tadding " + calcIndex(row+1, col));
 						}
 					}
 					// Left
 					if( col-1 >= 0 && ( getCellAt(calcIndex(row, col-1)).isDoorway() || getCellAt(calcIndex(row, col-1)).isWalkway() ) ) {
 						if( getCellAt(calcIndex(row, col-1)).isWalkway() || getRoomCellAt(row, col-1).getDoorDirection() == RoomCell.DoorDirection.RIGHT ) {
 							list.add(calcIndex(row, col-1));
-							//System.out.println("\tadding " + calcIndex(row, col-1));
 						}
 					}
 					// Right
 					if( col+1 < numColumns && ( getCellAt(calcIndex(row, col+1)).isDoorway() || getCellAt(calcIndex(row, col+1)).isWalkway() ) ) {
 						if( getCellAt(calcIndex(row, col+1)).isWalkway() || getRoomCellAt(row, col+1).getDoorDirection() == RoomCell.DoorDirection.LEFT ) {
 							list.add(calcIndex(row, col+1));
-							//System.out.println("\tadding " + calcIndex(row, col+1));
 						}
 					}
 				}
 				adjMatrix.put(calcIndex(row, col), list);
-				//System.out.println(list);
 			}
 		}
-		//System.out.println(calcIndex(6, 8) + " KKJKKK" );
-		//System.out.println(adjMatrix.get(98) + " . . . ");
 	}
 
 	/**
@@ -439,11 +485,14 @@ public class Board extends JPanel implements MouseListener {
 		targets.clear();
 		if (getCellAt(startLocation).isDoorway()) {
 			visited[startLocation] = true;
-			//System.out.println("1");
 			targets = calcTargetsRecursively(getAdjList(startLocation).getLast(), numberOfSteps-1);
 		} else {
-			//System.out.println("--2");
 			targets = calcTargetsRecursively(startLocation, numberOfSteps);
+		}
+		for (int i = 0; i < allPlayers.size(); i++) {
+			if (targets.contains(allPlayers.get(i).getCurrentLocation()) && !getCellAt(allPlayers.get(i).getCurrentLocation()).isRoom()) {
+				targets.remove(allPlayers.get(i).getCurrentLocation());
+			}
 		}
 	}
 
@@ -475,6 +524,14 @@ public class Board extends JPanel implements MouseListener {
 		for (int j = 0; j < compPlayers.size(); j++) {
 			players.add(compPlayers.get(j));
 		}
+		for (int i = 0; i < players.size(); i++) {
+			if (suggestion.contains(players.get(i).getName())) {
+				players.get(i).setCurrentLocation(current.getCurrentLocation());
+				players.get(i).setRow(current.getRow());
+				players.get(i).setColumn(current.getColumn());
+				repaint();
+			}
+		}
 		playerInt = p_rand.nextInt(players.size());
 		ArrayList<String> playerCards = new ArrayList<String>();		//copy list of the cards each player has
 		int counter = players.size();									// iteration through each player only once
@@ -495,7 +552,8 @@ public class Board extends JPanel implements MouseListener {
 					for (int f = 0; f < compPlayers.size(); f++) {
 						compPlayers.get(f).updateSeen(matches.get(cardInt));
 					}
-					return matches.get(cardInt);						//randomly returns match
+					//randomly returns match
+					return matches.get(cardInt);						
 				}
 			}
 			//if the random playerInt reaches end of the array, restarts at the beginning
@@ -508,6 +566,7 @@ public class Board extends JPanel implements MouseListener {
 		}
 		return null;
 	}
+	
 
 	/**
 	 * Convert row and column coordinates to cell index
@@ -567,6 +626,12 @@ public class Board extends JPanel implements MouseListener {
 	public void setAllCards(ArrayList<Card> allCards) {
 		this.allCards = allCards;
 	}
+	public String getCardShown() {
+		return cardShown;
+	}
+	public void setCardShown(String c) {
+		cardShown = c;
+	}
 	public int getNumPlayers() {
 		return numPlayers;
 	}
@@ -581,6 +646,12 @@ public class Board extends JPanel implements MouseListener {
 	}
 	public boolean isWon() {
 		return won;
+	}
+	public boolean isPlayerSelectedTarget() {
+		return playerSelectedTarget;
+	}
+	public boolean isPlayerEnteredRoom() {
+		return playerEnteredRoom;
 	}
 	public ArrayList<String> getAnswers() {
 		return answers;
@@ -603,18 +674,32 @@ public class Board extends JPanel implements MouseListener {
 
 	public void setWon() {
 		//determines if a winner has occured by comparing accusation to answers
-		if (getAccusations().get(0).equals(getAnswers().get(0)) && getAccusations().get(1).equals(getAnswers().get(1)) && getAccusations().get(2).equals(getAnswers().get(2))) {
+		if (getAccusations().contains(getAnswers().get(0)) && getAccusations().contains(getAnswers().get(1)) && getAccusations().contains(getAnswers().get(2))) {
 			won = true;
+			JOptionPane.showMessageDialog(null, getCurrentPlayer().getName() + " won!!!\n" + accusations);
+			setVisible(false);
 		} else {
 			won = false;
+			JOptionPane.showMessageDialog(null, getCurrentPlayer().getName() + " was wrong!\n" + accusations);
 		}
 	}
-
+	public boolean getSubmittionComplete() {
+		return submittionComplete;
+	}
+	public void setSubmittionComplete(boolean status) {
+		submittionComplete = status;
+	}
 	public Player getCurrentPlayer() {
 		return currentPlayer;
 	}
 	public void setCurrentPlayer(Player currentPlayer) {
 		this.currentPlayer = currentPlayer;
+	}
+	public boolean isTurnComplete() {
+		return turnComplete;
+	}
+	public void setTurnComplete(boolean turn) {
+		turnComplete = turn;
 	}
 	public ArrayList<String> getSuggestions() {
 		return suggestions;
@@ -626,20 +711,4 @@ public class Board extends JPanel implements MouseListener {
 		return cells.get(i);
 	}
 
-	public static void main(String[] args) {
-	Board board = new Board("roomLegend.txt", "craigAndLarsConfig.txt", "players.csv", "cards.csv");
-	board.makeMove();
-		//System.out.println(board.getDiceNum());
-	//board.calcAdjacencies();
-	//board.calcTargets(98, 2);
-	//board.highlightTargets();
-	//System.out.println(board.getCurrentPlayer().getCurrentLocation());
-	//board.calcTargets(board.getCurrentPlayer().getCurrentLocation(), 2);
-	//System.out.println(targets);
-	//int coord[] = calcCoords(98);
-	//System.out.println(coord[0] + " " + coord[1]);
-	//System.out.println(board.getAdjMatrix());
-	//System.out.println("Calc adjacencies");
-	//System.out.println("Adj List 126" + board.getAdjList(126));
-	}
 }

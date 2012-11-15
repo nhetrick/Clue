@@ -9,6 +9,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Random;
 
 public abstract class Player {
 	private String name;
@@ -18,8 +19,9 @@ public abstract class Player {
 	private int col;
 	private int targetLocation;
 	private int currentLocation;
-	final static public int size = 38;
-	final static public int diameter = 37;
+	final static public int size = 35;
+	final static public int diameter = 34;
+	
 	
 	//Draw the gui
 	public void draw(Graphics g) {

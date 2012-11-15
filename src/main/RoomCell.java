@@ -79,7 +79,7 @@ public class RoomCell extends BoardCell {
 			break;
 		case NAME:
 			g2.setColor(Color.white);
-			g.setFont(new Font("Arial", Font.BOLD, 9));
+			g.setFont(new Font("Arial", Font.BOLD, 8));
 			g.drawString(rooms.get(cellType).toUpperCase(), r*size, c*size);
 			break;
 		}

@@ -12,5 +12,4 @@ public class HumanPlayer extends Player {
 		ArrayList<Card> cards = new ArrayList<Card>();
 		setCards(cards);
 	}
-
 }

@@ -23,7 +23,7 @@ public class ClueGame extends JFrame {
 	
 	
 	public ClueGame () {
-		setSize(new Dimension(750, 975));
+		setSize(new Dimension(750, 950));
 		setTitle("CLUE");
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -37,7 +37,9 @@ public class ClueGame extends JFrame {
 
 	}
 	
-	
+	public static Board getBoard() {
+		return board;
+	}
 
 	private JMenu createFileMenu() {
 		JMenu menu = new JMenu("File"); 

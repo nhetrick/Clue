@@ -17,11 +17,12 @@ import javax.swing.JPanel;
 import main.Board;
 
 public class MakeAccusationPanel extends JFrame{
+	
 	Board board;
-	JComboBox personSelection;
-	JComboBox roomSelection;
-	JComboBox weaponSelection;
-	String roomSel, personSel, weaponSel = "";
+	private JComboBox personSelection;
+	private JComboBox roomSelection;
+	private JComboBox weaponSelection;
+	private String roomSel, personSel, weaponSel = "";
 	
 	public MakeAccusationPanel(Board b) {
 		board = b;
@@ -60,10 +61,7 @@ public class MakeAccusationPanel extends JFrame{
 		weaponSelection.addItem("ZAT'NI'KATEL");
 		weaponSelection.addItem("Glitter Gun");
 		weaponSelection.addItem("Anti-Plastic");
-		weaponSelection.addItem("Reaver");
 		weaponSelection.addItem("Ronan Dex");
-		weaponSelection.addItem("Glamdring");
-		weaponSelection.addItem("Dalek");
 		weaponSelection.addItem("Ancient Drone");
 		weaponSelection.addItem("Mjolnir");
 		add(weaponSelection);
@@ -89,19 +87,16 @@ public class MakeAccusationPanel extends JFrame{
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == roomSelection) {
 				roomSel = roomSelection.getSelectedItem().toString();
-				System.out.println(roomSel);
 			} 
 			if (e.getSource() == personSelection) {
 				personSel = personSelection.getSelectedItem().toString();
-				System.out.println(personSel);
 			} 
 			if (e.getSource() == weaponSelection) {
 				weaponSel = weaponSelection.getSelectedItem().toString();
-				System.out.println(weaponSel);
 			}
 		}
+		
 	}
-	
 	
 	private class SubmitListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
@@ -112,14 +107,10 @@ public class MakeAccusationPanel extends JFrame{
 				a.add(weaponSel);
 				board.setAccusations(a);
 				board.setWon();
-				if (board.isWon() == false) {
-					JOptionPane.showMessageDialog(null, "Sorry, That is incorrect.");
-					setVisible(false);
-				}
+				setVisible(false);
 			} else {
 				JOptionPane.showMessageDialog(null, "Incomplete Accusation.");
 			}
 		}
 	}
-	//setVisible(false);
 }

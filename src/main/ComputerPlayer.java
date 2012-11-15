@@ -4,9 +4,14 @@
  */
 package main;
 
+import gui.ClueGame;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 import java.util.Set;
+
+import main.Card.CardType;
 
 public class ComputerPlayer extends Player {
 	private char lastRoomVisited;	//for use with GUI
@@ -18,6 +23,7 @@ public class ComputerPlayer extends Player {
 		lastRoomVisited = 'X';
 	}
 	
+
 	public BoardCell pickLocation(Set<BoardCell> targets) {
 		//if it's room, you must enter unless previously entered room otherwise pick random room
 		ArrayList<BoardCell> nonRooms = new ArrayList<BoardCell>();
@@ -25,55 +31,48 @@ public class ComputerPlayer extends Player {
 		for(BoardCell key : targets) {
 			if (key.isRoom() && (key.getCellType() != getLastRoomVisited())) {
 				return key;
+			} else if (key.isRoom() && (key.getCellType() == getLastRoomVisited())) {
 			} else {
 				if (key.isRoom() == false)
 					nonRooms.add(key);
 			}
 		}
-		int randInt = rand.nextInt(nonRooms.size());
-		return nonRooms.get(randInt);
+		if (nonRooms.size() > 0) {
+			int randInt = rand.nextInt(Math.abs(nonRooms.size()));
+			return nonRooms.get(randInt);
+		} else {
+			return ClueGame.getBoard().getCellAt(getCurrentLocation());
+		}
 	}
 	
-	public ArrayList<String> createSuggestion(String person, String room, String weapon) {
-		//computer logic for creating a suggestion
-		char r = 'Z';
-		//converts given room to a char 
-		switch (room) {
-			case "Library": r = 'L';
-							break;
-			case "Conservatory": r = 'C';
-							break;
-			case "Kitchen": r = 'K';
-							break;
-			case "Ballroom": r = 'B';
-							break;
-			case "Billiard Room": r = 'R';
-							break;
-			case "Study": r = 'S';
-							break;
-			case "Dining Room": r = 'D';
-							break;
-			case "Lounge": r = 'O';
-							break;
-			case "Hall": r = 'H';
-							break;
-		}
-		//must be currentRoom 
-		if (r == getLastRoomVisited()) {
-			if (!(cardsSeen.contains(person)) && !(cardsSeen.contains(weapon))) {
-				ArrayList<String> selection = new ArrayList<String>();
-				selection.add(person);
-				selection.add(room);
-				selection.add(weapon);
-				return selection;
-			} else {
-				return null;
+	public ArrayList<String> createSuggestion(String room) {
+		boolean havePerson = false;
+		boolean haveWeapon = false;
+		String weapon = "";
+		String person = "";
+		
+		ArrayList<String> selection = new ArrayList<String>();
+		selection.add(room);
+		ArrayList<Card> cards = ClueGame.getBoard().getAllCards();
+		Collections.shuffle(cards);
+		for (int i = 0; i < cards.size(); i++) {
+			if (havePerson == false && cards.get(i).getCardType() == CardType.PERSON && !cardsSeen.contains(cards.get(i).getName())) {
+				person = cards.get(i).getName();
+				havePerson = true;
 			}
-		} else {
-			return null;
+			if (haveWeapon == false && cards.get(i).getCardType() == CardType.WEAPON && !cardsSeen.contains(cards.get(i).getName())) {
+				weapon = cards.get(i).getName();
+				haveWeapon = true;
+			}
 		}
+		selection.add(weapon);
+		selection.add(person);
+		
+		return selection;
 	}
 	public void updateSeen(String seen) {
+		
+		
 		cardsSeen.add(seen);
 	}
 	
